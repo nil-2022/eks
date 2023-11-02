@@ -1,0 +1,37 @@
+Kubernetes End to End project on EKS commanda
+
+eksctl create cluster --name demo-cluster --region us-east-1 --fargate
+
+aws eks update-kubeconfig --name demo-cluster --region us-east-1
+
+eksctl create fargateprofile --cluster demo-cluster --region us-east-1 --name alb-sample-app --namespace game-2048
+
+kubectl get pods -n game-2048
+
+kubectl get pods -n game-2048 -w
+
+kubectl get svc -n game-2048
+
+kubectl get ingress -n game-2048
+
+eksctl utils associate-iam-oidc-provider --cluster demo-cluster --region us-east-1 --approve
+
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.5.4/docs/install/iam_policy.json
+
+aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
+
+eksctl create iamserviceaccount --cluster=demo-cluster --region us-east-1 --namespace=kube-system --name=aws-load-balancer-controller --role-name AmazonEKSLoadBalancerControllerRole --attach-policy-arn=arn:aws:iam::777708496834:policy/AWSLoadBalancerControllerIAMPolicy --approve
+
+helm repo add eks https://aws.github.io/eks-charts
+
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=demo-cluster --set serviceAccount.create=false --set serviceAccount.name=aws-load-balancer-controller --set region=us-east-1 --set vpcId=vpc-0d8de9b54dcd5b74e
+
+kubectl get deployment -n kube-system aws-load-balancer-controller
+
+kubectl get pods -n kube-system -w
+
+kubectl get deploy -n kube-system
+
+kubectl edit deploy/aws-load-balancer-controller -n kube-system
+
+kubectl get ingress -n game-2048
